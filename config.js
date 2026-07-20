@@ -1,6 +1,6 @@
 module.exports = {
-    donoPrincipal: "SEU_NUMERO",
-    donoReserva: "NUMERO_DO_BOT",
+    donoPrincipal: "5532998261896",
+    donoReserva: "5532987224919",
 
     senhaSeguranca: "VBot_4829X",
 
