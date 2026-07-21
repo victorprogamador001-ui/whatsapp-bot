@@ -1,8 +1,39 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
+const express = require('express');
 
 const { mensagemGrupo } = require('./comandos/grupo');
 const { isDono, isAdmin, isAutorizado } = require('./comandos/admin');
+
+const app = express();
+
+let qrCodeAtual = null;
+
+app.get('/', (req, res) => {
+    res.send('🤖 Bot WhatsApp online!');
+});
+
+app.get('/qr', async (req, res) => {
+    if (!qrCodeAtual) {
+        return res.send('QR Code ainda não foi gerado. Aguarde...');
+    }
+
+    const imagem = await qrcode.toDataURL(qrCodeAtual);
+
+    res.send(`
+        <html>
+        <body style="text-align:center;font-family:Arial">
+            <h2>Escaneie o QR Code</h2>
+            <img src="${imagem}" />
+        </body>
+        </html>
+    `);
+});
+
+app.listen(process.env.PORT || 3000, () => {
+    console.log('Servidor web iniciado!');
+});
+
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -14,19 +45,23 @@ const client = new Client({
     }
 });
 
+
 client.on('qr', qr => {
-    qrcode.generate(qr, { small: true });
+    qrCodeAtual = qr;
+    console.log('QR Code gerado!');
 });
+
 
 client.on('ready', () => {
     console.log('Bot conectado! 🤖');
 });
 
+
 client.on('message', async message => {
 
     const numero = message.author || message.from;
 
-    // Comandos de grupo
+
     const respostaGrupo = mensagemGrupo(message.body);
 
     if (respostaGrupo) {
@@ -34,7 +69,7 @@ client.on('message', async message => {
         return;
     }
 
-    // Comando apenas para donos
+
     if (message.body === '!dono') {
 
         if (isDono(numero)) {
@@ -46,7 +81,7 @@ client.on('message', async message => {
         return;
     }
 
-    // Comando apenas para autorizados
+
     if (message.body === '!status') {
 
         if (isAutorizado(numero)) {
@@ -59,5 +94,6 @@ client.on('message', async message => {
     }
 
 });
+
 
 client.initialize();
