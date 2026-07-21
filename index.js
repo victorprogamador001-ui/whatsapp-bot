@@ -5,7 +5,13 @@ const { mensagemGrupo } = require('./comandos/grupo');
 const { isDono, isAdmin, isAutorizado } = require('./comandos/admin');
 
 const client = new Client({
-    authStrategy: new LocalAuth()
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
+    }
 });
 
 client.on('qr', qr => {
@@ -28,7 +34,6 @@ client.on('message', async message => {
         return;
     }
 
-
     // Comando apenas para donos
     if (message.body === '!dono') {
 
@@ -40,7 +45,6 @@ client.on('message', async message => {
 
         return;
     }
-
 
     // Comando apenas para autorizados
     if (message.body === '!status') {
@@ -55,6 +59,5 @@ client.on('message', async message => {
     }
 
 });
-
 
 client.initialize();
