@@ -8,7 +8,9 @@ let qrCodeAtual = '';
 
 const client = new Client({
 
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth({
+        clientId: "knight-bot"
+    }),
 
     puppeteer: {
         args: [
@@ -20,44 +22,31 @@ const client = new Client({
 });
 
 
-// Página do QR Code
+// Página QR
 app.get('/', async (req, res) => {
 
     if (!qrCodeAtual) {
 
         return res.send(`
-            <html>
-            <body style="text-align:center;font-family:Arial">
-
-            <h1>🤖 Knight Bot</h1>
-            <p>Bot conectado ou aguardando QR Code...</p>
-
-            </body>
-            </html>
+        <h1>🤖 Knight Bot</h1>
+        <p>Aguardando QR Code ou conectado...</p>
         `);
 
     }
 
-
     const qrImagem = await QRCode.toDataURL(qrCodeAtual);
 
-
     res.send(`
+    <html>
+    <body style="text-align:center;font-family:Arial">
 
-        <html>
+    <h1>🤖 Knight Bot</h1>
+    <h2>Escaneie o QR Code</h2>
 
-        <body style="text-align:center;font-family:Arial">
+    <img src="${qrImagem}" width="300">
 
-            <h1>🤖 Knight Bot</h1>
-
-            <h2>Escaneie o QR Code</h2>
-
-            <img src="${qrImagem}" width="300">
-
-        </body>
-
-        </html>
-
+    </body>
+    </html>
     `);
 
 });
@@ -84,9 +73,9 @@ client.on('qr', qr => {
 // Conectado
 client.on('ready', () => {
 
-    console.log('Bot conectado! 🤖');
-
     qrCodeAtual = '';
+
+    console.log('Bot conectado! 🤖');
 
 });
 
@@ -99,7 +88,7 @@ client.on('authenticated', () => {
 });
 
 
-// Erro de autenticação
+// Erro
 client.on('auth_failure', msg => {
 
     console.log('Falha na autenticação:', msg);
@@ -115,7 +104,7 @@ client.on('disconnected', reason => {
 });
 
 
-// Mensagens
+// Comandos
 client.on('message', async message => {
 
     const texto = message.body.toLowerCase();
@@ -131,17 +120,15 @@ client.on('message', async message => {
     if (texto === '!menu') {
 
         await message.reply(`
-
 🤖 *Knight Bot*
 
 📌 Comandos:
 
-!ping - Testa o bot
-!menu - Mostra comandos
-!dono - Criador do bot
+!ping - Teste
+!menu - Menu
+!dono - Criador
 
 ⚔️ Bot online!
-
         `);
 
     }
@@ -149,9 +136,7 @@ client.on('message', async message => {
 
     if (texto === '!dono') {
 
-        await message.reply(
-            '👑 Criador: Victor 🤖'
-        );
+        await message.reply('👑 Criador: Victor 🤖');
 
     }
 
