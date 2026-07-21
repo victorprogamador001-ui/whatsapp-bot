@@ -17,7 +17,6 @@ const client = new Client({
     }
 });
 
-
 // Página para mostrar o QR Code
 app.get('/', async (req, res) => {
 
@@ -44,36 +43,44 @@ app.get('/', async (req, res) => {
     `);
 });
 
-
 // Inicia servidor do Railway
 app.listen(process.env.PORT || 8080, () => {
     console.log('Servidor web iniciado!');
 });
 
-
 // Gera QR
 client.on('qr', qr => {
-
     qrCodeAtual = qr;
-
     console.log('QR Code gerado!');
 });
-
 
 // Quando conectar
 client.on('ready', () => {
     console.log('Bot conectado! 🤖');
 });
 
+// Quando autenticar
+client.on('authenticated', () => {
+    console.log('Autenticado! ✅');
+});
+
+// Se der erro na autenticação
+client.on('auth_failure', msg => {
+    console.log('Falha na autenticação:', msg);
+});
+
+// Se desconectar
+client.on('disconnected', reason => {
+    console.log('Desconectado:', reason);
+});
 
 // Mensagens
 client.on('message', async message => {
 
     if (message.body === '!ping') {
-        message.reply('Pong! 🤖');
+        await message.reply('Pong! 🤖');
     }
 
 });
-
 
 client.initialize();
