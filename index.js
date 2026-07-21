@@ -1,76 +1,79 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const express = require('express');
+const QRCode = require('qrcode');
 
-const { mensagemGrupo } = require('./comandos/grupo');
-const { isDono, isAdmin, isAutorizado } = require('./comandos/admin');
+const app = express();
+
+let qrCodeAtual = '';
 
 const client = new Client({
-    authStrategy: new LocalAuth({
-        clientId: "bot-novo"
-    }),
+    authStrategy: new LocalAuth(),
+
     puppeteer: {
         args: [
             '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage'
+            '--disable-setuid-sandbox'
         ]
     }
 });
 
-client.on('qr', qr => {
-    console.log('QR Code gerado!');
-    qrcode.generate(qr, { small: true });
+
+// Página para mostrar o QR Code
+app.get('/', async (req, res) => {
+
+    if (!qrCodeAtual) {
+        return res.send(`
+            <h1>🤖 Bot WhatsApp</h1>
+            <p>Aguardando QR Code...</p>
+        `);
+    }
+
+    const qrImagem = await QRCode.toDataURL(qrCodeAtual);
+
+    res.send(`
+        <html>
+        <body style="text-align:center;font-family:Arial">
+
+            <h1>🤖 WhatsApp Bot</h1>
+            <h2>Escaneie o QR Code</h2>
+
+            <img src="${qrImagem}" width="300"/>
+
+        </body>
+        </html>
+    `);
 });
 
+
+// Inicia servidor do Railway
+app.listen(process.env.PORT || 8080, () => {
+    console.log('Servidor web iniciado!');
+});
+
+
+// Gera QR
+client.on('qr', qr => {
+
+    qrCodeAtual = qr;
+
+    console.log('QR Code gerado!');
+});
+
+
+// Quando conectar
 client.on('ready', () => {
     console.log('Bot conectado! 🤖');
 });
 
-client.on('authenticated', () => {
-    console.log('Autenticado com sucesso!');
-});
 
-client.on('auth_failure', msg => {
-    console.log('Falha na autenticação:', msg);
-});
-
-client.on('disconnected', reason => {
-    console.log('Bot desconectado:', reason);
-});
-
+// Mensagens
 client.on('message', async message => {
 
-    const numero = message.author || message.from;
-
-    const respostaGrupo = mensagemGrupo(message.body);
-
-    if (respostaGrupo) {
-        await message.reply(respostaGrupo);
-        return;
-    }
-
-    if (message.body === '!dono') {
-
-        if (isDono(numero)) {
-            await message.reply('👑 Você é o dono do bot.');
-        } else {
-            await message.reply('❌ Você não tem permissão.');
-        }
-
-        return;
-    }
-
-    if (message.body === '!status') {
-
-        if (isAutorizado(numero)) {
-            await message.reply('✅ Você pode usar funções autorizadas.');
-        } else {
-            await message.reply('❌ Acesso negado.');
-        }
-
-        return;
+    if (message.body === '!ping') {
+        message.reply('Pong! 🤖');
     }
 
 });
+
 
 client.initialize();
