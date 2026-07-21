@@ -7,6 +7,7 @@ const app = express();
 let qrCodeAtual = '';
 
 const client = new Client({
+
     authStrategy: new LocalAuth(),
 
     puppeteer: {
@@ -15,72 +16,147 @@ const client = new Client({
             '--disable-setuid-sandbox'
         ]
     }
+
 });
 
-// Página para mostrar o QR Code
+
+// Página do QR Code
 app.get('/', async (req, res) => {
 
     if (!qrCodeAtual) {
+
         return res.send(`
-            <h1>🤖 Bot WhatsApp</h1>
-            <p>Aguardando QR Code...</p>
+            <html>
+            <body style="text-align:center;font-family:Arial">
+
+            <h1>🤖 Knight Bot</h1>
+            <p>Bot conectado ou aguardando QR Code...</p>
+
+            </body>
+            </html>
         `);
+
     }
+
 
     const qrImagem = await QRCode.toDataURL(qrCodeAtual);
 
+
     res.send(`
+
         <html>
+
         <body style="text-align:center;font-family:Arial">
 
-            <h1>🤖 WhatsApp Bot</h1>
+            <h1>🤖 Knight Bot</h1>
+
             <h2>Escaneie o QR Code</h2>
 
-            <img src="${qrImagem}" width="300"/>
+            <img src="${qrImagem}" width="300">
 
         </body>
+
         </html>
+
     `);
+
 });
 
-// Inicia servidor do Railway
+
+// Servidor Railway
 app.listen(process.env.PORT || 8080, () => {
+
     console.log('Servidor web iniciado!');
+
 });
 
-// Gera QR
+
+// QR Code
 client.on('qr', qr => {
+
     qrCodeAtual = qr;
+
     console.log('QR Code gerado!');
+
 });
 
-// Quando conectar
+
+// Conectado
 client.on('ready', () => {
+
     console.log('Bot conectado! 🤖');
+
+    qrCodeAtual = '';
+
 });
 
-// Quando autenticar
+
+// Autenticado
 client.on('authenticated', () => {
+
     console.log('Autenticado! ✅');
+
 });
 
-// Se der erro na autenticação
+
+// Erro de autenticação
 client.on('auth_failure', msg => {
+
     console.log('Falha na autenticação:', msg);
+
 });
 
-// Se desconectar
+
+// Desconectado
 client.on('disconnected', reason => {
+
     console.log('Desconectado:', reason);
+
 });
+
 
 // Mensagens
 client.on('message', async message => {
 
-    if (message.body === '!ping') {
+    const texto = message.body.toLowerCase();
+
+
+    if (texto === '!ping') {
+
         await message.reply('Pong! 🤖');
+
     }
 
+
+    if (texto === '!menu') {
+
+        await message.reply(`
+
+🤖 *Knight Bot*
+
+📌 Comandos:
+
+!ping - Testa o bot
+!menu - Mostra comandos
+!dono - Criador do bot
+
+⚔️ Bot online!
+
+        `);
+
+    }
+
+
+    if (texto === '!dono') {
+
+        await message.reply(
+            '👑 Criador: Victor 🤖'
+        );
+
+    }
+
+
 });
+
 
 client.initialize();
